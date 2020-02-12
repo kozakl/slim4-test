@@ -57,7 +57,7 @@ $app->get('/', function (Request $request, Response $response, $args) {
  * 
  */
 
-$app->setBasePath('/slim4-test/public');
+$app->setBasePath('/slim4-test');
 
 /** @var bool $displayErrorDetails */
 $displayErrorDetails = $container->get('settings')['displayErrorDetails'];
