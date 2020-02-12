@@ -14,8 +14,9 @@ class SessionMiddleware implements Middleware
      * {@inheritdoc}
      */
     public function process(Request $request, RequestHandler $handler): Response
-    {
+    {echo 'sds';
         if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            
             session_start();
             $request = $request->withAttribute('session', $_SESSION);
         }

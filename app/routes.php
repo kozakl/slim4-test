@@ -9,13 +9,8 @@ use Slim\App;
 use Slim\Interfaces\RouteCollectorProxyInterface as Group;
 
 return function (App $app) {
-    $app->get('/', function (Request $request, Response $response) {
-        $response->getBody()->write('Hello world!');
+    $app->get('/events', function (Request $request, Response $response) {
+        $response->getBody()->write('Hello world!ddd');
         return $response;
-    });
-
-    $app->group('/users', function (Group $group) {
-        $group->get('', ListUsersAction::class);
-        $group->get('/{id}', ViewUserAction::class);
     });
 };
