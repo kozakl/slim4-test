@@ -7,6 +7,7 @@ use App\Application\ResponseEmitter\ResponseEmitter;
 use DI\ContainerBuilder;
 use Slim\Factory\AppFactory;
 use Slim\Factory\ServerRequestCreatorFactory;
+require './config.php';
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -30,19 +31,55 @@ $repositories = require __DIR__ . '/../app/repositories.php';
 $repositories($containerBuilder);
 
 // Build PHP-DI Container instance
+
+
+try {
+    $dsn = "mysql:host=$host;dbname=$database";
+    $pdo = new PDO($dsn, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->exec('set names utf8');
+} catch(PDOException $exception) {
+    echo json_encode([
+        'error' => $exception->getMessage()
+    ]);
+    exit;
+}
+require './schemas/Events.php';
+
+
+require '../src/routes/events/index.php';
+
+
+
+
 $container = $containerBuilder->build();
 
+
+
+
+
+
+//$container2->set('db', $pdo);
+
 // Instantiate the app
-AppFactory::setContainer($container);
+AppFactory::setContainer(
+    (new ContainerBuilder())
+        ->addDefinitions([
+            'db' => $pdo,
+            'schemas' => (object)[
+                'events' => $Events
+            ]
+        ])->build()
+);
 $app = AppFactory::create();
 $callableResolver = $app->getCallableResolver();
+events($app);
 
 // Register middleware
 $middleware = require __DIR__ . '/../app/middleware.php';
 $middleware($app);
 
-require '../src/routes/events/index.php';
-events($app);
+
 // Register routes
 //$routes = require __DIR__ . '/../app/routes.php';
 //$routes($app);
@@ -85,3 +122,28 @@ $errorMiddleware->setDefaultErrorHandler($errorHandler);
 $response = $app->handle($request);
 $responseEmitter = new ResponseEmitter();
 $responseEmitter->emit($response);
+
+
+$app->add(JsonBodyParserMiddleware::class);
+
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+
+class JsonBodyParserMiddleware implements MiddlewareInterface
+{
+    public function process(Request $request, RequestHandler $handler): Response
+    {
+        $contentType = $request->getHeaderLine('Content-Type');
+
+        if (strstr($contentType, 'application/json')) {
+            $contents = json_decode(file_get_contents('php://input'), true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $request = $request->withParsedBody($contents);
+            }
+        }
+
+        return $handler->handle($request);
+    }
+}

@@ -7,10 +7,13 @@ require_once '../src/utils/quote.php';
 require_once '../src/utils/sql.php';
 
 return function(Request $request, Response $response) {
-    $response->getBody()->write('Hello wosrld!ddd');
-        return $response;
-        
-   /* $sql = prepare('
+    
+    $data = (array)$request->getParsedBody();
+    
+    
+    return $response->withJson($data)->withStatus(201);
+    
+     /*$sql = prepare('
         select :fields
         from
             events
