@@ -1,0 +1,13 @@
+# Dependencies
+vendor/
+
+# Mats
+mats/*
+
+# Public
+uploads/*
+
+# Others
+.idea/
+output.log
+TODO.txt
